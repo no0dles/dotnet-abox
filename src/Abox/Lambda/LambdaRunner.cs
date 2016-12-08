@@ -1,13 +1,14 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
 using System.Threading.Tasks;
+using System.Linq;
 using Abox.Core;
+using Abox.Lambda.Handlers;
+using Abox.Lambda.Messages;
+using Abox.Lambda.Models;
+using Abox.Lambda.Services;
 using Amazon.Lambda.APIGatewayEvents;
 using Amazon.Lambda.Core;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace Abox.Lambda
 {
@@ -17,50 +18,23 @@ namespace Abox.Lambda
             where TModule : Module, new()
         {
             var module = new TModule();
+            var serializationService = new SerializationService();
+            var builder = new LambdaModuleBuilder(module, serializationService);
 
-            module.Configure();
+            builder.AddHandler<RequestHandler, RequestMessage>();
+            builder.AddHandler<SerializationHandler, SerializationMessage>();
+
+            module.Configure(builder);
 
             module.Dependencies.AddSingleton(() => context);
+            module.Dependencies.AddSingleton(() => serializationService);
 
-            var response = new APIGatewayProxyResponse
-            {
-                StatusCode = (int)HttpStatusCode.OK,
-                Body = "",
-                Headers = new Dictionary<string, string> {
-                    { "Content-Type", "application/json" }
-                }
-            };
+            var handlerContext = new Context(module);
+            var responses = await handlerContext.Emit(new RequestMessage {Request = request});
 
-            try
-            {
-                var messages = JsonConvert.DeserializeObject<List<Message<JObject>>>(request?.Body);
-
-                if(messages == null)
-                {
-                    response.StatusCode = (int)HttpStatusCode.BadRequest;
-                    return response;
-                }
-
-                var convertedMessages = messages
-                    .Select(message => new Message<object>
-                    {
-                        Key = message.Key,
-                        Value = message.Value.ToObject(module.Messages[message.Key])
-                    });
-
-                response.Body = JsonConvert.SerializeObject(await module.Execute(convertedMessages));
-            }
-            catch(Exception ex)
-            {
-                response.StatusCode = (int)HttpStatusCode.InternalServerError;
-                response.Body = JsonConvert.SerializeObject(new
-                {
-                    Message = ex.Message,
-                    StackTrace = ex.StackTrace
-                });
-            }
-
-            return response;
+            return responses.OfType<ResponseMessage>()
+                .FirstOrDefault()
+                ?.Response;
         }
     }
 }

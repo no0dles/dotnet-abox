@@ -11,6 +11,7 @@ using Xunit;
 using Amazon.Lambda.TestUtilities;
 using Abox.Auth.Messages;
 using Abox.Auth.Models;
+using Abox.Data.Messages;
 using Newtonsoft.Json;
 
 
@@ -49,12 +50,12 @@ namespace Abox.Tests
 
             action.Add(new Message<object>
             {
-                Key = "create.todo",
-                Value = new CreateTodo
+                Key = "data.create.todo",
+                Value = new CreateDocument<Todo>
                 {
                     Document = new Todo
                     {
-                        Title = "test",
+                        Title = "t",
                         Description = "this is a test"
                     }
                 }
@@ -67,8 +68,7 @@ namespace Abox.Tests
 
             var response = await function.FunctionHandler(request, context);
 
-            Console.WriteLine(response.Body);
-            Assert.Equal(response.StatusCode, 200);
+            Assert.Equal(response?.StatusCode, 200);
         }
 
         private async Task SetupTableAsync()

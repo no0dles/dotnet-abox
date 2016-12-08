@@ -16,7 +16,7 @@ namespace Abox.Auth.Handlers
         public override async Task Run(LoginMessage message, IContext context)
         {
             var document = await context
-                .EmitOne<ReadDocumentResult<User>>(
+                .EmitOne(
                     new ReadDocument<User> {Id = message.Username});
 
             await context.Emit(new TokenMessage {

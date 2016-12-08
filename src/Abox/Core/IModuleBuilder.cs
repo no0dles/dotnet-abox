@@ -12,13 +12,7 @@ namespace Abox.Core
             where THandler : Handler<TMessage>, new()
             where TMessage : class, new();
 
-        void AddEvent<TMessage>()
-            where TMessage : class, new();
-
-        void AddEvent<TMessage>(string key)
-            where TMessage : class, new();
-
-        void Use<TModule>()
+        void AddModule<TModule>()
             where TModule : Module, new();
     }
 }

@@ -9,17 +9,9 @@ namespace Abox.Core
 
         Task<IEnumerable<object>> Emit(object action);
 
-        Task<IEnumerable<TResponse>> Emit<TResponse>(string key, object data)
-            where TResponse : class;
+        Task<object> EmitOne(string key, object data);
 
-        Task<IEnumerable<TResponse>> Emit<TResponse>(object action)
-            where TResponse : class;
-
-        Task<TResponse> EmitOne<TResponse>(string key, object data)
-            where TResponse : class;
-
-        Task<TResponse> EmitOne<TResponse>(object action)
-            where TResponse : class;
+        Task<object> EmitOne(object action);
 
         Task End(string key, object data);
 

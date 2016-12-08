@@ -1,0 +1,8 @@
+test/Abox.Tests/bin
+test/Abox.Tests/obj
+src/Abox/obj
+src/Abox/bin
+
+.DS_Store
+project.lock.json
+.idea

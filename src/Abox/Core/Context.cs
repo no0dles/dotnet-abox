@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -8,48 +9,63 @@ namespace Abox.Core
 {
     public class Context : IContext
     {
-        private readonly Module module;
+        public Module Root { get; set; }
+        public Context Parent { get; }
 
         public List<Message<object>> Messages { get; }
+
         public bool IsFinished { get; private set; }
 
-        public Context(Module module)
+        private int _level;
+
+        public Context(Module root, Context parent = null, int level = 0)
         {
-            this.module = module;
+            Root = root;
+            Parent = parent;
+
+            _level = level;
 
             Messages = new List<Message<object>>();
+
             IsFinished = false;
         }
 
-        public Task<IEnumerable<object>> Emit(string key, object data)
+        public void AddMessage(Message<object> message)
         {
-            return Emit<object>(key, data);
+            Messages.Add(message);
+            Parent?.AddMessage(message);
         }
 
-        public Task<IEnumerable<object>> Emit(object action)
+        public async Task<IEnumerable<object>> Emit(string key, object data)
         {
-            return Emit<object>(action);
-        }
-
-        public async Task<IEnumerable<TResponse>> Emit<TResponse>(string key, object data)
-            where TResponse : class
-        {
-            var action = new Message<object>
+            var message = new Message<object>
             {
                 Key = key, 
                 Value = data 
             };
 
-            Messages.Add(action);
+            AddMessage(message);
 
-            return (await module.Run<TResponse>(action))
-                .Select(a => a.Value);
+            Console.WriteLine($"-{new string(' ', _level*3)} {key} - {message.Value.GetType().FullName}");
+
+            foreach (var handle in Root.Resolve(key))
+            {
+                var context = new Context(Root, this, _level + 1);
+
+                await handle.Execute(data, context);
+
+                if(context.IsFinished)
+                    break;
+
+                await context.Emit(message);
+            }
+
+            return Messages.Select(m => m.Value);
         }
 
-        public async Task<IEnumerable<TResponse>> Emit<TResponse>(object action)
-            where TResponse : class
+        public async Task<IEnumerable<object>> Emit(object action)
         {
-            var responses = new List<TResponse>();
+            var responses = new List<object>();
 
             var attributes = action
                 .GetType()
@@ -57,10 +73,9 @@ namespace Abox.Core
                 .GetCustomAttributes<Message>();
 
             foreach(var attribute in attributes)
-                 responses.AddRange(await Emit<TResponse>(attribute.Name, action));
+                 responses.AddRange(await Emit(attribute.Name, action));
 
-            return responses
-                .Where(res => res is TResponse);
+            return responses;
         }
 
         public Task End(string key, object data)
@@ -77,17 +92,15 @@ namespace Abox.Core
             return Emit(action);
         }
 
-        public async Task<TResponse> EmitOne<TResponse>(string key, object data)
-            where TResponse : class
+        public async Task<object> EmitOne(string key, object data)
         {
-            return (await Emit<TResponse>(key, data))
+            return (await Emit(key, data))
                 .FirstOrDefault();
         }
 
-        public async Task<TResponse> EmitOne<TResponse>(object action)
-            where TResponse : class
+        public async Task<object> EmitOne(object action)
         {
-            return (await Emit<TResponse>(action))
+            return (await Emit(action))
                 .FirstOrDefault();
         }
     }

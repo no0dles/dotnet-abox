@@ -3,7 +3,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Abox.Core;
 using Abox.Core.Attributes;
-using Abox.Auth.Attributes;
 using Abox.Auth.Messages;
 using Abox.Auth.Models;
 using Abox.Auth.Services;
@@ -38,7 +37,10 @@ namespace Abox.Auth.Handlers
         {
             if (!IsPermitted(action))
             {
-                await context.End(new UnauthorizedMessage());
+                await context.End(new UnauthorizedMessage
+                {
+                    Key = $"No permission to execute '{action}'"
+                });
             }
         }
     }
