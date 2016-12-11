@@ -1,4 +1,5 @@
 ﻿using Abox.Core;
+using Abox.Data.Handlers;
 using Abox.Data.Services;
 
 namespace Abox.Data
@@ -8,6 +9,8 @@ namespace Abox.Data
         public override void Configure(IModuleBuilder builder)
         {
             builder.Dependencies.AddSingleton<DataService>();
+
+            builder.AddHandler<AuthorizationHandler, object>("*");
         }
     }
 }

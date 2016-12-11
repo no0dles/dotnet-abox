@@ -3,7 +3,6 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using Abox.Core;
-using Abox.Validation.Attributes;
 using Abox.Validation.Messages;
 
 namespace Abox.Validation.Handlers

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using System.Linq;
 using Abox.Core;
 using Abox.Lambda.Handlers;
@@ -8,7 +7,6 @@ using Abox.Lambda.Models;
 using Abox.Lambda.Services;
 using Amazon.Lambda.APIGatewayEvents;
 using Amazon.Lambda.Core;
-using Newtonsoft.Json;
 
 namespace Abox.Lambda
 {

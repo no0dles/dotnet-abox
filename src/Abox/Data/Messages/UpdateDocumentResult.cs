@@ -5,7 +5,7 @@ using Abox.Data.Models;
 namespace Abox.Data.Messages
 {
     [Message("data.update.document.result")]
-    [Internal]
+    [Internal(true)]
     public class UpdateDocumentResult<TDocument>
         where TDocument : Document
     {

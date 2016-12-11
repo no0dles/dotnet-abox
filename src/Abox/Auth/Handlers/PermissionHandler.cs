@@ -6,6 +6,7 @@ using Abox.Core.Attributes;
 using Abox.Auth.Messages;
 using Abox.Auth.Models;
 using Abox.Auth.Services;
+using Abox.Security.Attributes;
 
 namespace Abox.Auth.Handlers
 {
@@ -17,31 +18,44 @@ namespace Abox.Auth.Handlers
         [Inject]
         public PermissionService Permission { get; set; }
 
-        private bool IsPermitted(object action)
+        private bool IsPermitted(object message)
         {
-            var permission = Permission.Resolve(action.GetType());
+            var permission = Permission.Resolve(message.GetType());
 
-            if(permission.Anonymous)
+            if (permission.Anonymous)
                 return true;
 
-            if(permission.Claims.Any(claim => Auth.Claims.Contains(claim)))
+            if (permission.Claims.Any(claim => Auth.Claims.Contains(claim)))
                 return true;
 
-            if(permission.Roles.Any(role => Auth.Roles.Contains(role)))
+            if (permission.Roles.Any(role => Auth.Roles.Contains(role)))
                 return true;
 
             return false;
         }
 
-        public override async Task Run(object action, IContext context)
+        private bool isInternal(object message)
         {
-            if (!IsPermitted(action))
+            var internalAttribute = message
+                .GetType()
+                .GetTypeInfo()
+                .GetCustomAttribute<Internal>();
+
+            return internalAttribute != null;
+        }
+
+        public override async Task Run(object message, IContext context)
+        {
+            if (isInternal(message))
+                return;
+
+            if (IsPermitted(message))
+                return;
+
+            await context.End(new UnauthorizedMessage
             {
-                await context.End(new UnauthorizedMessage
-                {
-                    Key = $"No permission to execute '{action}'"
-                });
-            }
+                Key = $"No permission to execute '{message}'"
+            });
         }
     }
 }

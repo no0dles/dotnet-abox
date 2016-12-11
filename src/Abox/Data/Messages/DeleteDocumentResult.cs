@@ -5,7 +5,7 @@ using Abox.Data.Models;
 namespace Abox.Data.Messages
 {
     [Message("data.delete.document.result")]
-    [Internal]
+    [Internal(true)]
     public class DeleteDocumentResult<TDocument>
         where TDocument : Document
     {

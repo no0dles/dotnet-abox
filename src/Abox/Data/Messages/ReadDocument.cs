@@ -1,7 +1,9 @@
-﻿using Abox.Data.Models;
+﻿using Abox.Auth.Attributes;
+using Abox.Data.Models;
 
 namespace Abox.Data.Messages
 {
+    [AuthorizeAnonymous]
     public class ReadDocument<TDocument>
         where TDocument : Document
     {

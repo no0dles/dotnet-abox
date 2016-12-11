@@ -18,31 +18,10 @@ namespace Abox
     [Collection("todo")]
     public class TodoCollection : Collection<Todo>
     {
-        public override DataPermission Create => new DataPermission
-        {
-            Anonymous = true,
-            Roles = {"user", "admin"}
-        };
-
-        public override DataPermission Update => new DataPermission
-        {
-            Owner = true,
-            Roles = {"admin"}
-        };
-
-        public override DataPermission Delete => new DataPermission
-        {
-            Owner = true,
-            Roles = {"admin"}
-        };
-
-        public override DataPermission Read => new DataPermission
-        {
-            Owner = true,
-            Roles = {"admin"}
-        };
     }
 
+    [RoleReadWrite("admin")]
+    [OwnerReadWrite]
     public class Todo : Document
     {
         [Length(min: 3, max: 30)]
@@ -53,7 +32,7 @@ namespace Abox
         public string Description { get; set; }
 
         [Owner]
-        public string Owner { get; set; }
+        public string Username { get; set; }
     }
 
     public class DemoModule : Module
